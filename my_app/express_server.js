@@ -10,7 +10,7 @@ const __dirname = path.resolve();
 const app = express();
 
 // file path
-const filePath = path.join(__dirname, "data", "writing.json"); // my_app/data/writing.json
+//const filePath = path.join(__dirname, "data", "writing.json"); // my_app/data/writing.json
 
 // body parser set
 app.use(bodyParser.urlencoded({ extended: false })); // express 기본 모듈 사용
@@ -45,8 +45,10 @@ const Writing = mongoose.model("Writing", WritingSchema);
 // middleware : request와 response 사이 뭔가를 하게함
 // main page GET
 app.get('/', async (req, res) => {
-    const fileData = fs.readFileSync(filePath);
-    const writings = JSON.parse(fileData);
+    /* const fileData = fs.readFileSync(filePath);
+    const writings = JSON.parse(fileData); */
+
+    let writings = await Writing.find({});
 
     res.render('main', { list: writings }); // nunjucks setting으로 views를 했기 때문에
 });
@@ -58,6 +60,7 @@ app.get('/write', (req, res) => {
 app.post('/write', async (req, res) => {
     const title = req.body.title;
     const contents = req.body.contents;
+
     //const date = req.body.date;
 
     // 데이터 저장
@@ -84,7 +87,8 @@ app.post('/write', async (req, res) => {
     });
     const result = await writing.save().then(() => {
         console.log("Success");
-        res.render('detail', { 'detail': { title: title, contents: contents, /* date: date */ } });
+        // todo
+        res.render('detail/:id', { 'detail': { title: title, contents: contents, /* date: date */ } });
     }).catch((err) => {
         console.error(err);
         res.render("write");
@@ -92,8 +96,55 @@ app.post('/write', async (req, res) => {
 
 });
 
-app.get('/detail', async (req, res) => {
-    res.render('detail');
+app.get('/detail/:id', async (req, res) => {
+    const id = req.params.id;
+
+    const detail = await Writing.findOne({_id: id})
+    .then((result) => {
+        res.render("detail", {"detail": result});
+    })
+    .catch((err) => {
+        console.error(err);
+    });
+
+    //res.render('detail');
+});
+
+app.get('/edit/:id', async (req, res) => {
+    const id = req.params.id;
+
+    const edit = await Writing.findOne({ _id: id }).then((result) => {
+        res.render('detail', { 'edit': result })
+    }).catch((err) => {
+        console.error(err)
+    });
+});
+
+app.post('/edit/:id', async (req, res) => {
+    const id = req.params.id;
+    const title = req.body.title;
+    const contents = req.body.contents;
+
+    const edit = await Writing.replaceOne({ _id: id }, { title: title, contents: contents }).then((result) => {
+        console.log('update success')
+        res.render('detail', { 'detail': { 'id': id, 'title': title, 'contents': contents } });
+    }).catch((err) => {
+        console.error(err)
+    });
+});
+
+app.post('/delete/:id', async (req, res) => {
+    const id = req.params.id;
+
+    const delete_content = await Writing.deleteOne({_id: id})
+    .then(() => {
+        console.log('delete success');
+        res.redirect('/');
+    })
+    .catch((err) => {
+        console.error(err);
+    });
+
 })
 
 app.listen(3000, () => {

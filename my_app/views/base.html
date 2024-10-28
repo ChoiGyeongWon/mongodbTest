@@ -10,13 +10,15 @@
     <!-- 공통된 요소 -->
     <nav class="navbar bg-body-tertiary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Logo</a>
-            <a href="/write">글 작성</a>
+            <a class="navbar-brand" href="/">Express Blog</a>
+            <a href="/write" class="btn">글 작성</a>
         </div>
     </nav>
     <!-- 바뀌는 요소 -->
-    {% block content %}
-    {% endblock %}
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
 
     <!-- 공통된 요소 -->
     <footer>
